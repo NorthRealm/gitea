@@ -21,12 +21,19 @@ RUN apk --no-cache add \
 COPY . ${GOPATH}/src/code.gitea.io/gitea
 WORKDIR ${GOPATH}/src/code.gitea.io/gitea
 
-# Checkout version if set
-RUN if [ -n "${GITEA_VERSION}" ]; then git checkout "${GITEA_VERSION}"; fi \
- && make clean-all build
+ENV GOMODCACHE=/go/pkg/mod
+ENV GOCACHE=/go-build
+ENV NPM_CONFIG_CACHE=/npm-cache
 
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/go-build --mount=type=cache,target=/npm-cache <<EOF
+if [ -n "${GITEA_VERSION}" ]; then
+  # Checkout version if set
+  git checkout "${GITEA_VERSION}";
+fi
+make clean-all build
 # Begin env-to-ini build
-RUN go build contrib/environment-to-ini/environment-to-ini.go
+go build contrib/environment-to-ini/environment-to-ini.go
+EOF
 
 # Copy local files
 COPY docker/root /tmp/local
