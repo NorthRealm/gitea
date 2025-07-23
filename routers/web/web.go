@@ -1469,8 +1469,10 @@ func registerWebRoutes(m *web.Router) {
 			m.Post("/cancel", reqRepoActionsWriter, actions.Cancel)
 			m.Post("/approve", reqRepoActionsWriter, actions.Approve)
 			m.Post("/delete", reqRepoActionsWriter, actions.Delete)
-			m.Get("/artifacts/{artifact_name}", actions.ArtifactsDownloadView)
-			m.Delete("/artifacts/{artifact_name}", reqRepoActionsWriter, actions.ArtifactsDeleteView)
+			m.Group("/artifacts/{artifact_name}", func() {
+				m.Get("", actions.ArtifactsDownloadView)
+				m.Post("/delete", reqRepoActionsWriter, actions.ArtifactsDeleteView)
+			})
 			m.Post("/rerun", reqRepoActionsWriter, actions.Rerun)
 		})
 		m.Group("/workflows/{workflow_name}", func() {

@@ -5,7 +5,7 @@ import {defineComponent, type PropType} from 'vue';
 import {createElementFromAttrs, toggleElem} from '../utils/dom.ts';
 import {formatDatetime} from '../utils/time.ts';
 import {renderAnsi} from '../render/ansi.ts';
-import {POST, DELETE} from '../modules/fetch.ts';
+import {POST} from '../modules/fetch.ts';
 import type {IntervalId} from '../types.ts';
 import {toggleFullScreen} from '../utils.ts';
 
@@ -311,13 +311,6 @@ export default defineComponent({
       }
     },
 
-    async deleteArtifact(name: string) {
-      if (!window.confirm(this.locale.confirmDeleteArtifact.replace('%s', name))) return;
-      // TODO: should escape the "name"?
-      await DELETE(`${this.run.link}/artifacts/${name}`);
-      await this.loadJobForce();
-    },
-
     async fetchJobData(abortController: AbortController) {
       const logCursors = this.currentJobStepsStates.map((it, idx) => {
         // cursor is used to indicate the last position of the logs
@@ -503,7 +496,9 @@ export default defineComponent({
                     <SvgIcon name="octicon-file" class="text black"/>
                     <span class="gt-ellipsis">{{ artifact.name }}</span>
                   </a>
-                  <a v-if="run.canDeleteArtifact" @click="deleteArtifact(artifact.name)">
+                  <a v-if="run.canDeleteArtifact" class="link-action"
+                     :data-url="run.link+'/artifacts/'+artifact.name+'/delete'"
+                     :data-modal-confirm="locale.confirmDeleteArtifact.replace('%s', artifact.name)">
                     <SvgIcon name="octicon-trash" class="text black"/>
                   </a>
                 </template>
