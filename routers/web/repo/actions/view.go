@@ -693,7 +693,7 @@ func ArtifactsDeleteView(ctx *context_module.Context) {
 		ctx.ServerError("SetArtifactNeedDelete", err)
 		return
 	}
-	ctx.JSON(http.StatusOK, struct{}{})
+	ctx.JSONOK()
 }
 
 func ArtifactsDownloadView(ctx *context_module.Context) {
