@@ -52,6 +52,15 @@ func getRunIndex(ctx *context_module.Context) int64 {
 func View(ctx *context_module.Context) {
 	ctx.Data["PageIsActions"] = true
 	runIndex := getRunIndex(ctx)
+	ctx.Data["RunIndex"] = runIndex
+	ctx.Data["JobIndex"] = ""
+	ctx.Data["ActionsURL"] = ctx.Repo.RepoLink + "/actions"
+	ctx.HTML(http.StatusOK, tplViewActions)
+}
+
+func ViewJobs(ctx *context_module.Context) {
+	ctx.Data["PageIsActions"] = true
+	runIndex := getRunIndex(ctx)
 	jobIndex := ctx.PathParamInt64("job")
 	ctx.Data["RunIndex"] = runIndex
 	ctx.Data["JobIndex"] = jobIndex
@@ -119,6 +128,7 @@ type ViewResponse struct {
 			Title             string        `json:"title"`
 			TitleHTML         template.HTML `json:"titleHTML"`
 			Status            string        `json:"status"`
+			Duration          string        `json:"duration"`
 			CanCancel         bool          `json:"canCancel"`
 			CanApprove        bool          `json:"canApprove"` // the run needs an approval and the doer has permission to approve
 			CanRerun          bool          `json:"canRerun"`
@@ -206,15 +216,34 @@ func getActionsViewArtifacts(ctx context.Context, repoID, runIndex int64) (artif
 }
 
 func ViewPost(ctx *context_module.Context) {
+	viewJobsPost(ctx, -1)
+}
+
+func ViewJobsPost(ctx *context_module.Context) {
+	viewJobsPost(ctx, ctx.PathParamInt64("job"))
+}
+
+func viewJobsPost(ctx *context_module.Context, jobIndex int64) {
 	req := web.GetForm(ctx).(*ViewRequest)
 	runIndex := getRunIndex(ctx)
-	jobIndex := ctx.PathParamInt64("job")
 
-	current, jobs := getRunJobs(ctx, runIndex, jobIndex)
-	if ctx.Written() {
-		return
+	var current *actions_model.ActionRunJob = nil
+	var jobs []*actions_model.ActionRunJob
+	var run *actions_model.ActionRun
+
+	if jobIndex >= 0 {
+		current, jobs = getRunJobs(ctx, runIndex, jobIndex)
+		if ctx.Written() {
+			return
+		}
+		run = current.Run
+	} else {
+		_, jobs = getRunJobs(ctx, runIndex, 0)
+		if ctx.Written() {
+			return
+		}
+		run = jobs[0].Run
 	}
-	run := current.Run
 	if err := run.LoadAttributes(ctx); err != nil {
 		ctx.ServerError("run.LoadAttributes", err)
 		return
@@ -243,6 +272,7 @@ func ViewPost(ctx *context_module.Context) {
 	resp.State.Run.WorkflowLink = run.WorkflowLink()
 	resp.State.Run.IsSchedule = run.IsSchedule()
 	resp.State.Run.Jobs = make([]*ViewJob, 0, len(jobs)) // marshal to '[]' instead fo 'null' in json
+	resp.State.Run.Duration = run.Duration().String()
 	resp.State.Run.Status = run.Status.String()
 	for _, v := range jobs {
 		resp.State.Run.Jobs = append(resp.State.Run.Jobs, &ViewJob{
@@ -277,6 +307,11 @@ func ViewPost(ctx *context_module.Context) {
 		Link:     fmt.Sprintf("%s/commit/%s", run.Repo.Link(), run.CommitSHA),
 		Pusher:   pusher,
 		Branch:   branch,
+	}
+
+	if current == nil {
+		ctx.JSON(http.StatusOK, resp)
+		return
 	}
 
 	var task *actions_model.ActionTask

@@ -1460,8 +1460,8 @@ func registerWebRoutes(m *web.Router) {
 				Post(web.Bind(actions.ViewRequest{}), actions.ViewPost)
 			m.Group("/jobs/{job}", func() {
 				m.Combo("").
-					Get(actions.View).
-					Post(web.Bind(actions.ViewRequest{}), actions.ViewPost)
+					Get(actions.ViewJobs).
+					Post(web.Bind(actions.ViewRequest{}), actions.ViewJobsPost)
 				m.Post("/rerun", reqRepoActionsWriter, actions.Rerun)
 				m.Get("/logs", actions.Logs)
 			})
