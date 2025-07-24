@@ -121,6 +121,7 @@ export default defineComponent({
         title: '',
         titleHTML: '',
         status: '' as RunStatus, // do not show the status before initialized, otherwise it would show an incorrect "error" icon
+        duration: '',
         canCancel: false,
         canApprove: false,
         canRerun: false,
@@ -181,7 +182,9 @@ export default defineComponent({
     // load job data and then auto-reload periodically
     // need to await first loadJob so this.currentJobStepsStates is initialized and can be used in hashChangeListener
     await this.loadJob();
-    this.intervalID = setInterval(() => this.loadJob(), 1000);
+    if (this.jobIndex !== '') {
+      this.intervalID = setInterval(() => this.loadJob(), 1000);
+    }
     document.body.addEventListener('click', this.closeDropdown);
     this.hashChangeListener();
     window.addEventListener('hashchange', this.hashChangeListener);
@@ -318,7 +321,7 @@ export default defineComponent({
         // for example: make cursor=null means the first time to fetch logs, cursor=eof means no more logs, etc
         return {step: idx, cursor: it.cursor, expanded: it.expanded};
       });
-      const resp = await POST(`${this.actionsURL}/runs/${this.runIndex}/jobs/${this.jobIndex}`, {
+      const resp = await POST(`${this.actionsURL}/runs/${this.runIndex}${this.jobIndex !== "" ? `/jobs/${this.jobIndex}` : ""}`, {
         signal: abortController.signal,
         data: {logCursors},
       });
@@ -342,6 +345,9 @@ export default defineComponent({
 
         this.artifacts = job.artifacts || [];
         this.run = job.state.run;
+        if (this.jobIndex === '') {
+          return;
+        }
         this.currentJob = job.state.currentJob;
 
         // sync the currentJobStepsStates to store the job step states
@@ -467,12 +473,18 @@ export default defineComponent({
           <a v-else class="gt-ellipsis" :href="run.commit.branch.link" :data-tooltip-content="run.commit.branch.name">{{ run.commit.branch.name }}</a>
         </span>
       </div>
+      <div class="action-info-summary" style="padding: 6px 0;">
+        <span>
+          <SvgIcon name="octicon-stopwatch" class="text black"/>
+          {{ run.duration }}
+        </span>
+      </div>
     </div>
     <div class="action-view-body">
       <div class="action-view-left">
         <div class="job-group-section">
           <div class="job-brief-list">
-            <a class="job-brief-item" :href="run.link+'/jobs/'+index" :class="parseInt(jobIndex) === index ? 'selected' : ''" v-for="(job, index) in run.jobs" :key="job.id">
+            <a class="job-brief-item" :href="run.link+'/jobs/'+index" :class="jobIndex !== '' && parseInt(jobIndex) === index ? 'selected' : ''" v-for="(job, index) in run.jobs" :key="job.id">
               <div class="job-brief-item-left">
                 <ActionRunStatus :locale-status="locale.status[job.status]" :status="job.status"/>
                 <span class="job-brief-name tw-mx-2 gt-ellipsis">{{ job.name }}</span>
@@ -513,7 +525,7 @@ export default defineComponent({
         </div>
       </div>
 
-      <div class="action-view-right">
+      <div class="action-view-right" v-if="jobIndex !== ''">
         <div class="job-info-header">
           <div class="job-info-header-left gt-ellipsis">
             <h3 class="job-info-header-title gt-ellipsis">

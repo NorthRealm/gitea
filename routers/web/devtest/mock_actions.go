@@ -64,6 +64,7 @@ func MockActionsRunsJobs(ctx *context.Context) {
 	req := web.GetForm(ctx).(*actions.ViewRequest)
 	resp := &actions.ViewResponse{}
 	resp.State.Run.TitleHTML = `mock run title <a href="/">link</a>`
+	resp.State.Run.Duration = "1h2m3s"
 	resp.State.Run.Status = actions_model.StatusRunning.String()
 	resp.State.Run.CanCancel = runID == 10
 	resp.State.Run.CanApprove = runID == 20
