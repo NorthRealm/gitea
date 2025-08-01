@@ -196,10 +196,7 @@ export default defineComponent({
   unmounted() {
     // clear the interval timer when the component is unmounted
     // even our page is rendered once, not spa style
-    if (this.intervalID) {
-      clearInterval(this.intervalID);
-      this.intervalID = null;
-    }
+    this.cancelPolling();
   },
 
   methods: {
@@ -332,6 +329,13 @@ export default defineComponent({
       await this.loadJob();
     },
 
+    cancelPolling() {
+      if (this.intervalID) {
+        clearInterval(this.intervalID);
+        this.intervalID = null;
+      }
+    },
+
     async loadJob() {
       if (this.loadingAbortController) return;
       const abortController = new AbortController();
@@ -341,12 +345,16 @@ export default defineComponent({
         const job = await this.fetchJobData(abortController);
         if (this.loadingAbortController !== abortController) return;
 
-        this.artifacts = job.artifacts || [];
+        this.artifacts = job.artifacts ?? [];
         this.run = job.state.run;
         if (this.jobIndex === '') {
+          if (this.run.done) {
+            this.cancelPolling();
+          }
           return;
         }
         this.currentJob = job.state.currentJob;
+        this.currentJob.steps = this.currentJob.steps ?? [];
 
         // sync the currentJobStepsStates to store the job step states
         for (let i = 0; i < this.currentJob.steps.length; i++) {
@@ -380,9 +388,8 @@ export default defineComponent({
         autoScrollJobStepElement?.lastElementChild.scrollIntoView({behavior: 'smooth', block: 'nearest'});
 
         // clear the interval timer if the job is done
-        if (this.run.done && this.intervalID) {
-          clearInterval(this.intervalID);
-          this.intervalID = null;
+        if (this.run.done) {
+          this.cancelPolling();
         }
       } catch (e) {
         // avoid network error while unloading page, and ignore "abort" error
