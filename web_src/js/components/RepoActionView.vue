@@ -354,6 +354,7 @@ export default defineComponent({
           return;
         }
         this.currentJob = job.state.currentJob;
+        this.currentJob.steps = this.currentJob.steps ?? [];
 
         // sync the currentJobStepsStates to store the job step states
         for (let i = 0; i < this.currentJob.steps.length; i++) {

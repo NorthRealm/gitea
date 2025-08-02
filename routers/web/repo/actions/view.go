@@ -120,7 +120,7 @@ type ArtifactsViewItem struct {
 }
 
 type ViewResponse struct {
-	Artifacts []*ArtifactsViewItem `json:"artifacts"`
+	Artifacts []*ArtifactsViewItem `json:"artifacts,omitempty"`
 
 	State struct {
 		Run struct {
@@ -141,13 +141,13 @@ type ViewResponse struct {
 			Commit            ViewCommit    `json:"commit"`
 		} `json:"run"`
 		CurrentJob struct {
-			Title  string         `json:"title"`
-			Detail string         `json:"detail"`
-			Steps  []*ViewJobStep `json:"steps"`
+			Title  string         `json:"title,omitempty"`
+			Detail string         `json:"detail,omitempty"`
+			Steps  []*ViewJobStep `json:"steps,omitempty"`
 		} `json:"currentJob"`
 	} `json:"state"`
 	Logs struct {
-		StepsLog []*ViewStepLog `json:"stepsLog"`
+		StepsLog []*ViewStepLog `json:"stepsLog,omitempty"`
 	} `json:"logs"`
 }
 
