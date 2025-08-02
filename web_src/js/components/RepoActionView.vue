@@ -345,7 +345,7 @@ export default defineComponent({
         const job = await this.fetchJobData(abortController);
         if (this.loadingAbortController !== abortController) return;
 
-        this.artifacts = job.artifacts || [];
+        this.artifacts = job.artifacts ?? [];
         this.run = job.state.run;
         if (this.jobIndex === '') {
           if (this.run.done) {
