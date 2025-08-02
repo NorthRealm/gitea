@@ -143,11 +143,11 @@ type ViewResponse struct {
 		CurrentJob struct {
 			Title  string         `json:"title,omitempty"`
 			Detail string         `json:"detail,omitempty"`
-			Steps  []*ViewJobStep `json:"steps,omitempty"`
+			Steps  []*ViewJobStep `json:"steps"`
 		} `json:"currentJob"`
 	} `json:"state"`
 	Logs struct {
-		StepsLog []*ViewStepLog `json:"stepsLog,omitempty"`
+		StepsLog []*ViewStepLog `json:"stepsLog"`
 	} `json:"logs"`
 }
 
