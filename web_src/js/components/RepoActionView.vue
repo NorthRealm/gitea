@@ -8,6 +8,8 @@ import {renderAnsi} from '../render/ansi.ts';
 import {POST} from '../modules/fetch.ts';
 import type {IntervalId} from '../types.ts';
 import {toggleFullScreen} from '../utils.ts';
+import * as d3 from "d3";
+import * as dagreD3 from "dagre-d3-es";
 
 // see "models/actions/status.go", if it needs to be used somewhere else, move it to a shared file like "types/actions.ts"
 type RunStatus = 'unknown' | 'waiting' | 'running' | 'success' | 'failure' | 'cancelled' | 'skipped' | 'blocked';
@@ -31,6 +33,7 @@ type Job = {
   name: string;
   status: RunStatus;
   canRerun: boolean;
+  needs: string[];
   duration: string;
 }
 
@@ -104,6 +107,7 @@ export default defineComponent({
       // internal state
       loadingAbortController: null as AbortController | null,
       intervalID: null as IntervalId | null,
+      jobsDAGRendered: false,
       currentJobStepsStates: [] as Array<Record<string, any>>,
       artifacts: [] as Array<Record<string, any>>,
       menuVisible: false,
@@ -136,6 +140,7 @@ export default defineComponent({
           //   name: '',
           //   status: '',
           //   canRerun: false,
+          //   needs: []
           //   duration: '',
           // },
         ] as Array<Job>,
@@ -348,6 +353,7 @@ export default defineComponent({
         this.artifacts = job.artifacts ?? [];
         this.run = job.state.run;
         if (this.jobIndex === '') {
+          this.renderJobsDAG();
           if (this.run.done) {
             this.cancelPolling();
           }
@@ -423,6 +429,30 @@ export default defineComponent({
       this.isFullScreen = !this.isFullScreen;
       toggleFullScreen('.action-view-right', this.isFullScreen, '.action-view-body');
     },
+
+    renderJobsDAG() {
+      if (this.jobsDAGRendered) {
+        return;
+      }
+      this.jobsDAGRendered = true;
+      const graph = new dagreD3.graphlib.Graph().setGraph({});
+      graph.setDefaultEdgeLabel(() => {
+        return {};
+      });
+      for (const job of this.run.jobs) {
+        graph.setNode(job.name, { label: job.name, style: "fill: gray;", labelStyle: "font: 300 14px 'Helvetica Neue', Helvetica; fill: white;" });
+      }
+      for (const job of this.run.jobs) {
+        for (const need of job.needs ?? []) {
+          graph.setEdge(need, job.name, { style: "stroke: gray; fill:none; stroke-width: 1px;", arrowheadStyle: "fill: gray;" });
+        }
+      }
+      const svg = d3.select(".action-view-right").append("svg");
+      const inner = svg.append("g");
+      const render = dagreD3.render();
+      render(inner, graph);
+    },
+
     async hashChangeListener() {
       const selectedLogStep = window.location.hash;
       if (!selectedLogStep) return;
@@ -598,6 +628,7 @@ export default defineComponent({
           </div>
         </div>
       </div>
+      <div v-else class="action-view-right" style="background: var(--color-console-fg)"></div>
     </div>
   </div>
 </template>
