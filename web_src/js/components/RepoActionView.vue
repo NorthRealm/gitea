@@ -436,21 +436,32 @@ export default defineComponent({
       }
       this.jobsDAGRendered = true;
       const graph = new dagreD3.graphlib.Graph().setGraph({});
+      graph.graph().rankdir = "LR";
       graph.setDefaultEdgeLabel(() => {
         return {};
       });
       for (const job of this.run.jobs) {
-        graph.setNode(job.name, { label: job.name, style: "fill: gray;", labelStyle: "font: 300 14px 'Helvetica Neue', Helvetica; fill: white;" });
+        graph.setNode(job.name, {
+          label: job.name,
+          labelStyle: "font: 300 14px 'Helvetica Neue', Helvetica; fill: white;",
+          labelType: "html",
+          style: "fill: gray;"
+        });
       }
       for (const job of this.run.jobs) {
         for (const need of job.needs ?? []) {
-          graph.setEdge(need, job.name, { style: "stroke: gray; fill:none; stroke-width: 1px;", arrowheadStyle: "fill: gray;" });
+          graph.setEdge(need, job.name, { style: "stroke: gray; fill: none; stroke-width: 1px;", arrowheadStyle: "fill: gray;" });
         }
       }
-      const svg = d3.select(".action-view-right").append("svg");
-      const inner = svg.append("g");
+      const svg = d3.select(".action-view-right").append<SVGSVGElement>("svg");
+      const inner = svg.append<SVGGElement>("g");
+      const zoom = d3.zoom<SVGSVGElement, unknown>().on("zoom", (event) => {
+        inner.attr("transform", event.transform.toString());
+      });
+      svg.call(zoom);
       const render = dagreD3.render();
       render(inner, graph);
+      svg.call(zoom.transform, d3.zoomIdentity.translate(20, 20).scale(1));
     },
 
     async hashChangeListener() {
@@ -628,7 +639,7 @@ export default defineComponent({
           </div>
         </div>
       </div>
-      <div v-else class="action-view-right" style="background: var(--color-console-fg)"></div>
+      <div v-else class="action-view-right" style="border: none; background: var(--color-console-fg)"></div>
     </div>
   </div>
 </template>
