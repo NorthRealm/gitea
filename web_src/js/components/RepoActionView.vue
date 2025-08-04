@@ -440,20 +440,28 @@ export default defineComponent({
       graph.setDefaultEdgeLabel(() => {
         return {};
       });
-      for (const job of this.run.jobs) {
+      this.run.jobs.forEach((job, index) => {
         graph.setNode(job.name, {
-          label: job.name,
-          labelStyle: "font: 300 14px 'Helvetica Neue', Helvetica; fill: white;",
+          label: `<a href="${this.run.link}/jobs/${index}" style="text-decoration: none; color: black;">${job.name}</a>`,
           labelType: "html",
-          style: "fill: gray;"
+          style: "fill: white; stroke: gray; stroke-width: 1;"
         });
-      }
+      });
       for (const job of this.run.jobs) {
         for (const need of job.needs ?? []) {
-          graph.setEdge(need, job.name, { style: "stroke: gray; fill: none; stroke-width: 1px;", arrowheadStyle: "fill: gray;" });
+          graph.setEdge(need, job.name, {
+            style: "stroke: lightgray; fill: none; stroke-width: 1px;",
+            arrowheadStyle: "fill: lightgray;",
+            curve: d3.curveBasis
+          });
         }
       }
-      const svg = d3.select(".action-view-right").append<SVGSVGElement>("svg");
+      const svg = d3.select(".action-view-right")
+        .append<SVGSVGElement>("svg")
+        .attr("xmlns", "http://www.w3.org/2000/svg")
+        .attr("xmlns:xlink", "http://www.w3.org/1999/xlink")
+        .attr("width", "100%")
+        .attr("height", "60vh");
       const inner = svg.append<SVGGElement>("g");
       const zoom = d3.zoom<SVGSVGElement, unknown>().on("zoom", (event) => {
         inner.attr("transform", event.transform.toString());
