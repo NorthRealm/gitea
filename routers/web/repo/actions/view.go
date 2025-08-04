@@ -143,11 +143,11 @@ type ViewResponse struct {
 		CurrentJob struct {
 			Title  string         `json:"title,omitempty"`
 			Detail string         `json:"detail,omitempty"`
-			Steps  []*ViewJobStep `json:"steps"`
+			Steps  []*ViewJobStep `json:"steps,omitempty"`
 		} `json:"currentJob"`
 	} `json:"state"`
 	Logs struct {
-		StepsLog []*ViewStepLog `json:"stepsLog"`
+		StepsLog []*ViewStepLog `json:"stepsLog,omitempty"`
 	} `json:"logs"`
 }
 
@@ -155,7 +155,6 @@ type ViewJob struct {
 	ID       int64    `json:"id"`
 	Name     string   `json:"name"`
 	Status   string   `json:"status"`
-	CanRerun bool     `json:"canRerun"`
 	Needs    []string `json:"needs,omitempty"`
 	Duration string   `json:"duration"`
 }
@@ -280,7 +279,6 @@ func viewJobsPost(ctx *context_module.Context, jobIndex int64) {
 			ID:       v.ID,
 			Name:     v.Name,
 			Status:   v.Status.String(),
-			CanRerun: resp.State.Run.CanRerun,
 			Needs:    v.Needs,
 			Duration: v.Duration().String(),
 		})

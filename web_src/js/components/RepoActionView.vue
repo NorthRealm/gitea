@@ -32,7 +32,6 @@ type Job = {
   id: number;
   name: string;
   status: RunStatus;
-  canRerun: boolean;
   needs: string[];
   duration: string;
 }
@@ -139,7 +138,6 @@ export default defineComponent({
           //   id: 0,
           //   name: '',
           //   status: '',
-          //   canRerun: false,
           //   needs: []
           //   duration: '',
           // },
@@ -527,12 +525,6 @@ export default defineComponent({
           <a v-else class="gt-ellipsis" :href="run.commit.branch.link" :data-tooltip-content="run.commit.branch.name">{{ run.commit.branch.name }}</a>
         </span>
       </div>
-      <div class="action-info-summary" style="padding: 6px 0;">
-        <span>
-          <SvgIcon name="octicon-stopwatch" class="text black"/>
-          {{ run.duration }}
-        </span>
-      </div>
     </div>
     <div class="action-view-body">
       <div class="action-view-left">
@@ -544,7 +536,7 @@ export default defineComponent({
                 <span class="job-brief-name tw-mx-2 gt-ellipsis">{{ job.name }}</span>
               </div>
               <span class="job-brief-item-right">
-                <SvgIcon name="octicon-sync" role="button" :data-tooltip-content="locale.rerun" class="job-brief-rerun tw-mx-2 link-action" :data-url="`${run.link}/jobs/${index}/rerun`" v-if="job.canRerun"/>
+                <SvgIcon name="octicon-sync" role="button" :data-tooltip-content="locale.rerun" class="job-brief-rerun tw-mx-2 link-action" :data-url="`${run.link}/jobs/${index}/rerun`" v-if="run.canRerun"/>
                 <span class="step-summary-duration">{{ job.duration }}</span>
               </span>
             </a>
