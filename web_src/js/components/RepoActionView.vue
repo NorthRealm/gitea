@@ -129,7 +129,6 @@ export default defineComponent({
         canApprove: false,
         canRerun: false,
         canDeleteArtifact: false,
-        done: false,
         workflowID: '',
         workflowLink: '',
         isSchedule: false,
@@ -350,9 +349,10 @@ export default defineComponent({
 
         this.artifacts = job.artifacts ?? [];
         this.run = job.state.run;
+        const runDone = this.isDone(this.run.status);
         if (this.jobIndex === '') {
           this.renderJobsDAG();
-          if (this.run.done) {
+          if (runDone) {
             this.cancelPolling();
           }
           return;
@@ -392,7 +392,7 @@ export default defineComponent({
         autoScrollJobStepElement?.lastElementChild.scrollIntoView({behavior: 'smooth', block: 'nearest'});
 
         // clear the interval timer if the job is done
-        if (this.run.done) {
+        if (runDone) {
           this.cancelPolling();
         }
       } catch (e) {

@@ -133,7 +133,6 @@ type ViewResponse struct {
 			CanApprove        bool          `json:"canApprove"` // the run needs an approval and the doer has permission to approve
 			CanRerun          bool          `json:"canRerun"`
 			CanDeleteArtifact bool          `json:"canDeleteArtifact"`
-			Done              bool          `json:"done"`
 			WorkflowID        string        `json:"workflowID"`
 			WorkflowLink      string        `json:"workflowLink"`
 			IsSchedule        bool          `json:"isSchedule"`
@@ -267,7 +266,6 @@ func viewJobsPost(ctx *context_module.Context, jobIndex int64) {
 	resp.State.Run.CanApprove = run.NeedApproval && ctx.Repo.CanWrite(unit.TypeActions)
 	resp.State.Run.CanRerun = run.Status.IsDone() && ctx.Repo.CanWrite(unit.TypeActions)
 	resp.State.Run.CanDeleteArtifact = run.Status.IsDone() && ctx.Repo.CanWrite(unit.TypeActions)
-	resp.State.Run.Done = run.Status.IsDone()
 	resp.State.Run.WorkflowID = run.WorkflowID
 	resp.State.Run.WorkflowLink = run.WorkflowLink()
 	resp.State.Run.IsSchedule = run.IsSchedule()
